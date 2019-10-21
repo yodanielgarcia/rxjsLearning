@@ -1,22 +1,27 @@
 import { displayLog } from './utils';
-import { from } from "rxjs";
+import { Observable } from "rxjs";
 export default () => {
     /** start coding */
-    const myArray = [1,2,3,4,5,6,7];
+    const hello = Observable.create((observer) => {
+        //metodp next para hacer push de valores
+        observer.next("hello");
+        setTimeout(() => {
+            observer.next("world");   
+            //cuando ya esta completo el observable      
+            observer.complete();
+        }, 2000);
+    });
+    //secuencia de objetos asincorona
+    const observer = {
+        next: evt => displayLog(evt),
+        error: err => console.error('err[]-',err),
+        complete: () => displayLog('[DONE]')        
+    }
 
-    const myString = "Hello world";
-    const myPromise = new Promise(resolve => setTimeout(() => {
-        resolve('hello world');
-    }, 2000));
-
-    const observableArray = from(myArray);
-    const observableString = from(myString);
-    const observablePromise = from(myPromise);
-
-    const subscribeArray = observableArray.subscribe( val => displayLog(val));
-    const subscribeString = observableString.subscribe( val => displayLog(val));
-    const subscribePromise = observablePromise.subscribe( val => displayLog(val));
-
-   //From para convertir promises en observables--------secuencias obserbables a partir de arrays
+    const subscribe = hello.subscribe(observer);
+    //Subcribe crea una nueva ejecucuon de flujo de datos
+    const subscribeTwo = hello.subscribe(observer);
+    //Cancelar la subcripcion al observable
+    subscribe.unsubscribe();
     /** end coding */
 }
