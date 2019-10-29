@@ -1,6 +1,6 @@
 import { displayLog } from './utils';
 import { fromEvent } from 'rxjs';
-import { map, takeLast, takeWhile, tap, reduce, scan} from "rxjs/operators";
+import { map, startWith, takeWhile, tap, endWith} from "rxjs/operators";
 export default () => {
     /** start coding */
     const grid = document.getElementById('grid');
@@ -12,23 +12,11 @@ export default () => {
         //mientras pase x
         takeWhile(([col, row]) => col != 0),
         tap(val => console.log(`valid in takewhile ${val}`)),
-        //aplica un acomulador y emite el resultado al cerrar el stream 
-        /*reduce((accumulated, current) => {
-            return {
-                clicks: accumulated.clicks +1,
-                cells: [... accumulated.cells, current]
-            }
-        }, {clicks:0, cells:[]}),*/
-        //scan emite un evento con el valor acomulado (total acomulado, evento actual)
-        scan((accumulated, current) => {
-            return {
-                clicks: accumulated.clicks +1,
-                cells: [... accumulated.cells, current]
-            }
-        }, {clicks:0, cells:[]}) 
+        startWith("grid dimensions: ", "10*10"),
+        endWith("game fin", "bye")
     );
 
-    const subscription = click$.subscribe(data => displayLog(data.clicks));
+    const subscription = click$.subscribe(data => displayLog(data));
 
     /** end coding */
 }
