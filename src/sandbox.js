@@ -1,22 +1,47 @@
-import { displayLog } from './utils';
-import { fromEvent } from 'rxjs';
-import { map, takeWhile, tap, distinctUntilChanged} from "rxjs/operators";
+import { updateDisplay } from './utils';
+import { fromEvent, Subject } from 'rxjs';
+import { map, tap, share } from 'rxjs/operators';
+
 export default () => {
     /** start coding */
-    const grid = document.getElementById('grid');
-    const click$ = fromEvent(grid, 'click').pipe(
-        map(val => [ 
-            Math.floor(val.offsetX/50), 
-            Math.floor(val.offsetY/50)
-        ]),
-        takeWhile(([col, row]) => col != 0),
-        tap(val => console.log(`valid in takewhile ${val}`)),
-        // distinct(([col ,row]) => `${col} - ${row}`)
-        //evitar eventos de forma consecutiva
-        distinctUntilChanged((cell1, cell2) => (cell1[0] == cell2[0]) && (cell1[0] == cell2[0]))
+
+    const progressBar = document.getElementById('progress-bar');
+    const docElement = document.documentElement;
+
+    //function to update progress bar width on view
+    const updateProgressBar = (percentage) => {
+        progressBar.style.width = `${percentage}%`;
+    }
+
+    //observable that returns scroll (from top) on scroll events
+    const scroll$ = fromEvent(document, 'scroll').pipe(
+        map(() => docElement.scrollTop),
+        tap(evt => console.log("[scroll]: ", evt))
     );
 
-    const subscription = click$.subscribe(data => displayLog(data));
+    //observable that returns the amount of page scroll progress
+    const scrollProgress$ = scroll$.pipe(
+        map(evt => {
+            const docHeight = docElement.scrollHeight - docElement.clientHeight;
+            return (evt / docHeight) * 100;
+        }),
+
+        //compatir un unico flujo de datos con varios observadores--HOT_OBSERBABLE
+        //share()
+    )
+
+    const scrollProgressHot$ = new Subject();
+    scrollProgress$.subscribe(scrollProgressHot$);
+
+    //subscribe to scroll progress to paint a progress bar
+    const subscription = scrollProgressHot$.subscribe(updateProgressBar);
+
+    //subscribe to display scroll progress percentage
+    const subscription2 = scrollProgressHot$.subscribe(
+        val => updateDisplay(`${Math.floor(val)} %`)
+    );
+
+    scrollProgressHot$.next(0);
 
     /** end coding */
 }
